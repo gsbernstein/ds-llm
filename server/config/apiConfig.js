@@ -39,7 +39,7 @@ const API_CONFIG = {
   server: {
     port: process.env.PORT || 5001,
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: process.env.CLIENT_URL || ["http://localhost:3000", "https://clinical-trial-search-07sv.onrender.com"],
       credentials: true
     }
   }

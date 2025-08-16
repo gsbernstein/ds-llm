@@ -1,11 +1,26 @@
 import React from 'react';
+import { TranscriptInputProps } from '../types';
 
-function TranscriptInput({ transcript, setTranscript, onSubmit, onUseSample, loading }) {
-  const handleSubmit = (e) => {
+const TranscriptInput: React.FC<TranscriptInputProps> = ({ 
+  transcript, 
+  setTranscript, 
+  onSubmit, 
+  onUseSample, 
+  loading 
+}) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     if (transcript.trim()) {
       onSubmit(transcript);
     }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+    setTranscript(e.target.value);
+  };
+
+  const handleUseSampleClick = (): void => {
+    onUseSample();
   };
 
   return (
@@ -28,11 +43,11 @@ function TranscriptInput({ transcript, setTranscript, onSubmit, onUseSample, loa
             </label>
             <textarea
               id="transcript"
-              rows="12"
+              rows={12}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 resize-none"
               placeholder="Paste the transcript of the patient-doctor conversation here..."
               value={transcript}
-              onChange={(e) => setTranscript(e.target.value)}
+              onChange={handleTextareaChange}
               disabled={loading}
             />
             <p className="mt-2 text-sm text-gray-500">
@@ -58,7 +73,7 @@ function TranscriptInput({ transcript, setTranscript, onSubmit, onUseSample, loa
             
             <button
               type="button"
-              onClick={onUseSample}
+              onClick={handleUseSampleClick}
               disabled={loading}
               className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
@@ -80,6 +95,6 @@ function TranscriptInput({ transcript, setTranscript, onSubmit, onUseSample, loa
       </div>
     </div>
   );
-}
+};
 
 export default TranscriptInput;

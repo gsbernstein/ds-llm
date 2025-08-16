@@ -3,16 +3,24 @@ import TranscriptInput from './components/TranscriptInput';
 import PatientDataDisplay from './components/PatientDataDisplay';
 import ClinicalTrialsList from './components/ClinicalTrialsList';
 import Header from './components/Header';
+import { 
+  PatientData, 
+  ClinicalTrial, 
+  AppStep, 
+  AnalyzeTranscriptResponse, 
+  SearchTrialsResponse,
+  SampleTranscriptResponse 
+} from './types';
 
-function App() {
-  const [transcript, setTranscript] = useState('');
-  const [patientData, setPatientData] = useState(null);
-  const [trials, setTrials] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [currentStep, setCurrentStep] = useState('input'); // input, analysis, results
+function App(): React.JSX.Element {
+  const [transcript, setTranscript] = useState<string>('');
+  const [patientData, setPatientData] = useState<PatientData | null>(null);
+  const [trials, setTrials] = useState<ClinicalTrial[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState<AppStep>('input');
 
-  const handleTranscriptSubmit = async (transcriptText) => {
+  const handleTranscriptSubmit = async (transcriptText: string): Promise<void> => {
     setLoading(true);
     setError(null);
     
@@ -30,7 +38,7 @@ function App() {
         throw new Error('Failed to analyze transcript');
       }
 
-      const extractedData = await response.json();
+      const extractedData: AnalyzeTranscriptResponse = await response.json();
       setPatientData(extractedData);
       setCurrentStep('analysis');
 
@@ -52,21 +60,22 @@ function App() {
         throw new Error('Failed to search clinical trials');
       }
 
-      const trialsData = await trialsResponse.json();
-      setTrials(trialsData);
+      const trialsData: SearchTrialsResponse = await trialsResponse.json();
+      setTrials(trialsData.trials);
       setCurrentStep('results');
     } catch (err) {
-      setError(err.message);
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
       setCurrentStep('input');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUseSampleTranscript = async () => {
+  const handleUseSampleTranscript = async (): Promise<void> => {
     try {
       const response = await fetch('/api/sample-transcript');
-      const data = await response.json();
+      const data: SampleTranscriptResponse = await response.json();
       setTranscript(data.transcript);
       await handleTranscriptSubmit(data.transcript);
     } catch (err) {
@@ -74,12 +83,16 @@ function App() {
     }
   };
 
-  const handleReset = () => {
+  const handleReset = (): void => {
     setTranscript('');
     setPatientData(null);
     setTrials([]);
     setError(null);
     setCurrentStep('input');
+  };
+
+  const handleErrorDismiss = (): void => {
+    setError(null);
   };
 
   return (
@@ -91,7 +104,7 @@ function App() {
           <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
             <strong>Error:</strong> {error}
             <button
-              onClick={() => setError(null)}
+              onClick={handleErrorDismiss}
               className="ml-2 text-red-500 hover:text-red-700"
             >
               ×

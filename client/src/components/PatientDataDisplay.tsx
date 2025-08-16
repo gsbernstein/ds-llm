@@ -1,16 +1,20 @@
 import React from 'react';
+import { PatientDataDisplayProps, SeverityLevel } from '../types';
 
-function PatientDataDisplay({ patientData }) {
+const PatientDataDisplay: React.FC<PatientDataDisplayProps> = ({ patientData }) => {
   if (!patientData) return null;
 
-  const formatValue = (value) => {
+  const formatValue = (value: string | string[] | number | undefined): string => {
     if (Array.isArray(value)) {
       return value.join(', ');
+    }
+    if (typeof value === 'number') {
+      return value.toString();
     }
     return value || 'Not specified';
   };
 
-  const getSeverityColor = (severity) => {
+  const getSeverityColor = (severity: SeverityLevel | undefined): string => {
     switch (severity?.toLowerCase()) {
       case 'severe':
         return 'bg-red-100 text-red-800';
@@ -66,7 +70,7 @@ function PatientDataDisplay({ patientData }) {
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Symptoms</label>
             <div className="flex flex-wrap gap-2">
-              {Array.isArray(patientData.symptoms) ? patientData.symptoms.map((symptom, index) => (
+              {Array.isArray(patientData.symptoms) ? patientData.symptoms.map((symptom: string, index: number) => (
                 <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                   {symptom}
                 </span>
@@ -81,7 +85,7 @@ function PatientDataDisplay({ patientData }) {
           <div>
             <label className="block text-sm font-medium text-gray-500 mb-1">Current Medications</label>
             <div className="flex flex-wrap gap-2">
-              {Array.isArray(patientData.currentMedications) ? patientData.currentMedications.map((med, index) => (
+              {Array.isArray(patientData.currentMedications) ? patientData.currentMedications.map((med: string, index: number) => (
                 <span key={index} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
                   {med}
                 </span>
@@ -98,28 +102,50 @@ function PatientDataDisplay({ patientData }) {
             <p className="text-gray-900">{formatValue(patientData.medicalHistory)}</p>
           </div>
           
-          <div>
-            <label className="block text-sm font-medium text-gray-500 mb-1">Family History</label>
-            <p className="text-gray-900">{formatValue(patientData.familyHistory)}</p>
-          </div>
-          
-          {patientData.treatmentPlan && (
+          {patientData.allergies && patientData.allergies.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Treatment Plan</label>
-              <p className="text-gray-900">{formatValue(patientData.treatmentPlan)}</p>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Allergies</label>
+              <div className="flex flex-wrap gap-2">
+                {patientData.allergies.map((allergy: string, index: number) => (
+                  <span key={index} className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                    {allergy}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {patientData.vitalSigns && (
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Vital Signs</label>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                {patientData.vitalSigns.bloodPressure && (
+                  <div>
+                    <span className="text-gray-500">BP:</span> {patientData.vitalSigns.bloodPressure}
+                  </div>
+                )}
+                {patientData.vitalSigns.heartRate && (
+                  <div>
+                    <span className="text-gray-500">HR:</span> {patientData.vitalSigns.heartRate} bpm
+                  </div>
+                )}
+                {patientData.vitalSigns.temperature && (
+                  <div>
+                    <span className="text-gray-500">Temp:</span> {patientData.vitalSigns.temperature}°F
+                  </div>
+                )}
+                {patientData.vitalSigns.weight && (
+                  <div>
+                    <span className="text-gray-500">Weight:</span> {patientData.vitalSigns.weight} kg
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
       </div>
-      
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> This information was extracted using AI analysis of the conversation transcript. 
-          Please verify all details with the patient's medical records before making clinical decisions.
-        </p>
-      </div>
     </div>
   );
-}
+};
 
 export default PatientDataDisplay;

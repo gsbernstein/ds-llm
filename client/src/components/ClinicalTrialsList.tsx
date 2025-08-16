@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
+import { ClinicalTrialsListProps, ClinicalTrial, TrialPhase, TrialStatus, PhaseFilter, StatusFilter } from '../types';
 
-function ClinicalTrialsList({ trials }) {
-  const [expandedTrial, setExpandedTrial] = useState(null);
-  const [filterPhase, setFilterPhase] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+const ClinicalTrialsList: React.FC<ClinicalTrialsListProps> = ({ trials }) => {
+  const [expandedTrial, setExpandedTrial] = useState<string | null>(null);
+  const [filterPhase, setFilterPhase] = useState<PhaseFilter>('all');
+  const [filterStatus, setFilterStatus] = useState<StatusFilter>('all');
 
   if (!trials || trials.length === 0) {
     return (
@@ -20,7 +21,7 @@ function ClinicalTrialsList({ trials }) {
     );
   }
 
-  const getPhaseColor = (phase) => {
+  const getPhaseColor = (phase: TrialPhase | undefined): string => {
     switch (phase?.toLowerCase()) {
       case 'phase 1':
         return 'bg-blue-100 text-blue-800';
@@ -35,7 +36,7 @@ function ClinicalTrialsList({ trials }) {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: TrialStatus | undefined): string => {
     switch (status?.toLowerCase()) {
       case 'recruiting':
         return 'bg-green-100 text-green-800';
@@ -50,7 +51,7 @@ function ClinicalTrialsList({ trials }) {
     }
   };
 
-  const filteredTrials = trials.filter(trial => {
+  const filteredTrials = trials.filter((trial: ClinicalTrial) => {
     if (filterPhase !== 'all' && trial.phase?.toLowerCase() !== filterPhase.toLowerCase()) {
       return false;
     }
@@ -60,8 +61,16 @@ function ClinicalTrialsList({ trials }) {
     return true;
   });
 
-  const toggleTrialExpansion = (nctId) => {
+  const toggleTrialExpansion = (nctId: string): void => {
     setExpandedTrial(expandedTrial === nctId ? null : nctId);
+  };
+
+  const handlePhaseFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    setFilterPhase(e.target.value as PhaseFilter);
+  };
+
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    setFilterStatus(e.target.value as StatusFilter);
   };
 
   return (
@@ -77,7 +86,7 @@ function ClinicalTrialsList({ trials }) {
         <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
           <select
             value={filterPhase}
-            onChange={(e) => setFilterPhase(e.target.value)}
+            onChange={handlePhaseFilterChange}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="all">All Phases</option>
@@ -89,7 +98,7 @@ function ClinicalTrialsList({ trials }) {
           
           <select
             value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            onChange={handleStatusFilterChange}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-primary-500 focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="all">All Statuses</option>
@@ -102,7 +111,7 @@ function ClinicalTrialsList({ trials }) {
       </div>
 
       <div className="space-y-4">
-        {filteredTrials.map((trial) => (
+        {filteredTrials.map((trial: ClinicalTrial) => (
           <div key={trial.nctId} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-3">
               <h4 className="text-lg font-semibold text-gray-900 flex-1 mr-4">
@@ -136,13 +145,21 @@ function ClinicalTrialsList({ trials }) {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-gray-700">Condition:</span>
-                <p className="text-gray-600">{trial.condition || 'Not specified'}</p>
+                <span className="font-medium text-gray-700">Conditions:</span>
+                <p className="text-gray-600">
+                  {trial.conditions && trial.conditions.length > 0 
+                    ? trial.conditions.join(', ') 
+                    : 'Not specified'}
+                </p>
               </div>
               
               <div>
-                <span className="font-medium text-gray-700">Intervention:</span>
-                <p className="text-gray-600">{trial.intervention || 'Not specified'}</p>
+                <span className="font-medium text-gray-700">Interventions:</span>
+                <p className="text-gray-600">
+                  {trial.interventions && trial.interventions.length > 0 
+                    ? trial.interventions.join(', ') 
+                    : 'Not specified'}
+                </p>
               </div>
               
               <div>
@@ -151,20 +168,24 @@ function ClinicalTrialsList({ trials }) {
               </div>
               
               <div>
-                <span className="font-medium text-gray-700">Location:</span>
-                <p className="text-gray-600">{trial.country || 'Not specified'}</p>
+                <span className="font-medium text-gray-700">Locations:</span>
+                <p className="text-gray-600">
+                  {trial.locations && trial.locations.length > 0 
+                    ? trial.locations.join(', ') 
+                    : 'Not specified'}
+                </p>
               </div>
             </div>
             
             {expandedTrial === trial.nctId && (
               <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                {trial.description && (
+                {trial.briefSummary && (
                   <div>
                     <span className="font-medium text-gray-700">Description:</span>
                     <p className="text-gray-600 mt-1 text-sm leading-relaxed">
-                      {trial.description.length > 300 
-                        ? `${trial.description.substring(0, 300)}...` 
-                        : trial.description}
+                      {trial.briefSummary.length > 300 
+                        ? `${trial.briefSummary.substring(0, 300)}...` 
+                        : trial.briefSummary}
                     </p>
                   </div>
                 )}
@@ -221,6 +242,6 @@ function ClinicalTrialsList({ trials }) {
       </div>
     </div>
   );
-}
+};
 
 export default ClinicalTrialsList;

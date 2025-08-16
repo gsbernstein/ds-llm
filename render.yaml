@@ -18,10 +18,10 @@ services:
   # Frontend service
   - type: web
     name: clinical-trial-search
-    env: static
+    env: node
     plan: free
     buildCommand: cd client && npm install --legacy-peer-deps && npm run build
-    staticPublishPath: ./client/build
+    startCommand: cd client && npx serve -s build -l $PORT
     envVars:
       - key: REACT_APP_API_URL
         value: https://clinical-trial-search-api.onrender.com

@@ -21,46 +21,17 @@ export interface PatientData {
 export interface ClinicalTrial {
   nctId: string;
   title: string;
-  phase?: 'Phase 1' | 'Phase 2' | 'Phase 3' | 'Phase 4' | 'Not Applicable';
-  status: 'Recruiting' | 'Active, not recruiting' | 'Completed' | 'Terminated' | 'Suspended' | 'Withdrawn';
-  briefSummary?: string;
-  detailedDescription?: string;
-  conditions?: string[];
-  interventions?: string[];
-  eligibilityCriteria?: string;
-  locations?: string[];
-  sponsor?: string;
-  startDate?: string;
-  completionDate?: string;
-  enrollment?: number;
-  primaryOutcomeMeasures?: string[];
-  secondaryOutcomeMeasures?: string[];
-  studyType?: string;
-  allocation?: string;
-  masking?: string;
-  primaryPurpose?: string;
-  officialTitle?: string;
-  leadSponsor?: string;
-  collaborator?: string;
-  investigator?: string;
-  studyDirector?: string;
-  responsibleParty?: string;
-  studyDocuments?: string[];
-  resultsFirstPosted?: string;
-  lastUpdatePosted?: string;
-  lastVerified?: string;
-  keywords?: string[];
-  meshTerms?: string[];
-  centralContact?: {
-    name?: string;
-    phone?: string;
-    email?: string;
-  };
-  overallContact?: {
-    name?: string;
-    phone?: string;
-    email?: string;
-  };
+  condition: string;
+  intervention: string;
+  phase: string;
+  status: string;
+  sponsor: string;
+  country: string;
+  enrollment: string;
+  startDate: string;
+  completionDate: string;
+  description: string;
+  studyType: string;
 }
 
 // API Response Types

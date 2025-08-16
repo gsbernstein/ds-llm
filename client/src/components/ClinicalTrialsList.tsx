@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ClinicalTrialsListProps, ClinicalTrial, TrialPhase, TrialStatus, PhaseFilter, StatusFilter } from '../types';
+import { ClinicalTrialsListProps, ClinicalTrial, PhaseFilter, StatusFilter } from '../types';
 
 const ClinicalTrialsList: React.FC<ClinicalTrialsListProps> = ({ trials }) => {
   const [expandedTrial, setExpandedTrial] = useState<string | null>(null);
@@ -21,22 +21,22 @@ const ClinicalTrialsList: React.FC<ClinicalTrialsListProps> = ({ trials }) => {
     );
   }
 
-  const getPhaseColor = (phase: TrialPhase | undefined): string => {
+  const getPhaseColor = (phase: string | undefined): string => {
     switch (phase?.toLowerCase()) {
-      case 'phase 1':
+      case 'phase1':
         return 'bg-blue-100 text-blue-800';
-      case 'phase 2':
+      case 'phase2':
         return 'bg-green-100 text-green-800';
-      case 'phase 3':
+      case 'phase3':
         return 'bg-yellow-100 text-yellow-800';
-      case 'phase 4':
+      case 'phase4':
         return 'bg-purple-100 text-purple-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusColor = (status: TrialStatus | undefined): string => {
+  const getStatusColor = (status: string | undefined): string => {
     switch (status?.toLowerCase()) {
       case 'recruiting':
         return 'bg-green-100 text-green-800';
@@ -145,21 +145,13 @@ const ClinicalTrialsList: React.FC<ClinicalTrialsListProps> = ({ trials }) => {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="font-medium text-gray-700">Conditions:</span>
-                <p className="text-gray-600">
-                  {trial.conditions && trial.conditions.length > 0 
-                    ? trial.conditions.join(', ') 
-                    : 'Not specified'}
-                </p>
+                <span className="font-medium text-gray-700">Condition:</span>
+                <p className="text-gray-600">{trial.condition || 'Not specified'}</p>
               </div>
               
               <div>
-                <span className="font-medium text-gray-700">Interventions:</span>
-                <p className="text-gray-600">
-                  {trial.interventions && trial.interventions.length > 0 
-                    ? trial.interventions.join(', ') 
-                    : 'Not specified'}
-                </p>
+                <span className="font-medium text-gray-700">Intervention:</span>
+                <p className="text-gray-600">{trial.intervention || 'Not specified'}</p>
               </div>
               
               <div>
@@ -168,24 +160,20 @@ const ClinicalTrialsList: React.FC<ClinicalTrialsListProps> = ({ trials }) => {
               </div>
               
               <div>
-                <span className="font-medium text-gray-700">Locations:</span>
-                <p className="text-gray-600">
-                  {trial.locations && trial.locations.length > 0 
-                    ? trial.locations.join(', ') 
-                    : 'Not specified'}
-                </p>
+                <span className="font-medium text-gray-700">Country:</span>
+                <p className="text-gray-600">{trial.country || 'Not specified'}</p>
               </div>
             </div>
             
             {expandedTrial === trial.nctId && (
               <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                {trial.briefSummary && (
+                {trial.description && (
                   <div>
                     <span className="font-medium text-gray-700">Description:</span>
                     <p className="text-gray-600 mt-1 text-sm leading-relaxed">
-                      {trial.briefSummary.length > 300 
-                        ? `${trial.briefSummary.substring(0, 300)}...` 
-                        : trial.briefSummary}
+                      {trial.description.length > 300 
+                        ? `${trial.description.substring(0, 300)}...` 
+                        : trial.description}
                     </p>
                   </div>
                 )}

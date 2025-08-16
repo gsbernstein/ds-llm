@@ -73,7 +73,8 @@ app.post('/api/search-trials', async (req, res) => {
     }
 
     // Build search query for ClinicalTrials.gov API
-    const searchTerms = [diagnosis, ...symptoms].join(' ');
+    const searchTerms = [diagnosis].join(' ');
+    console.log('searchTerms',searchTerms);
     
     try {
       // Using the ClinicalTrials.gov API v2
@@ -85,52 +86,60 @@ app.post('/api/search-trials', async (req, res) => {
         }
       });
 
-      const trials = response.data.studies || [];
+      const trials = response.data.studies;
+      console.log(`Found ${trials.length} trials from API`);
       
-      // Filter and format trials
+      // format trials
       const formattedTrials = trials
-        .filter(trial => {
-          // Basic filtering - we'll implement more sophisticated filtering later
-          return true; // For now, return all trials
-        })
-        .map(trial => {
-          const identification = trial.protocolSection?.identificationModule;
-          const description = trial.protocolSection?.descriptionModule;
-          const status = trial.protocolSection?.statusModule;
-          const sponsor = trial.protocolSection?.sponsorCollaboratorsModule;
-          const conditions = trial.protocolSection?.conditionsModule;
-          const interventions = trial.protocolSection?.interventionsModule;
-          const eligibility = trial.protocolSection?.eligibilityModule;
-          
-          return {
-            nctId: identification?.nctId,
-            title: identification?.briefTitle || identification?.officialTitle || 'Title not available',
-            condition: conditions?.conditions?.[0] || 'Not specified',
-            intervention: interventions?.interventions?.[0]?.interventionName || 'Not specified',
-            phase: status?.phase || 'Not specified',
-            status: status?.overallStatus || 'Not specified',
-            sponsor: sponsor?.leadSponsor?.leadSponsorName || 'Not specified',
-            country: eligibility?.locations?.[0]?.country || 'Not specified',
-            enrollment: eligibility?.enrollmentInfo?.enrollmentCount || 'Not specified',
-            startDate: status?.startDateStruct?.date || 'Not specified',
-            completionDate: status?.completionDateStruct?.date || 'Not specified',
-            description: description?.briefSummary || 'Study details available on ClinicalTrials.gov',
-            studyType: status?.studyType || 'Not specified'
-          };
-        })
-        .slice(0, API_CONFIG.clinicalTrials.maxResults); // Limit to configured max results
+          .map(trial => {
+            const protocol = trial.protocolSection;
+            const identification = protocol?.identificationModule;
+            const description = protocol?.descriptionModule;
+            const status = protocol?.statusModule;
+            const conditions = protocol?.conditionsModule;
+            const design = protocol?.designModule;
+            // const eligibility = protocol?.eligibilityModule;
+            const locations = protocol?.contactsLocationsModule;
 
-      res.json(formattedTrials);
+            return {
+              nctId: identification?.nctId || 'N/A',
+              title: identification?.briefTitle || identification?.officialTitle || 'Title not available',
+              condition: conditions?.conditions?.[0] || 'Not specified',
+              intervention: 'Not specified', // Not available in current API response
+              phase: design?.phases?.[0] || 'Not specified',
+              status: status?.overallStatus || 'Not specified',
+              sponsor: 'Not specified', // Not available in current API response
+              country: locations?.locations?.[0]?.country || 'Not specified',
+              enrollment: design?.enrollmentInfo?.count?.toString() || 'Not specified',
+              startDate: status?.startDateStruct?.date || 'Not specified',
+              completionDate: status?.completionDateStruct?.date || 'Not specified',
+              description: description?.briefSummary || 'Study details available on ClinicalTrials.gov',
+              studyType: design?.studyType || 'Not specified'
+            };
+          });
+
+      console.log(`Returning ${formattedTrials.length} formatted trials`);
+      res.json({ 
+        trials: formattedTrials, 
+        totalCount: formattedTrials.length, 
+        searchCriteria: { diagnosis, symptoms, patientAge, patientGender } 
+      });
     } catch (apiError) {
       console.error('ClinicalTrials.gov API error:', apiError.message);
-      console.error('Full error:', apiError);
-      console.error('Error response:', apiError.response?.data);
+      // console.error('Full error:', apiError);
+      // console.error('Error response:', apiError.response?.data);
       
       // Fallback to sample trial data
-      res.json(mockClinicalTrials);
+      console.log('Falling back to mock clinical trials data');
+      res.json({ 
+        trials: mockClinicalTrials, 
+        totalCount: mockClinicalTrials.length, 
+        searchCriteria: { diagnosis, symptoms, patientAge, patientGender } 
+      });
+      // throw apiError;
     }
   } catch (error) {
-    console.error('Error searching trials:', error);
+    // console.error('Error searching trials:', error);
     res.status(500).json({ error: 'Failed to search clinical trials' });
   }
 });

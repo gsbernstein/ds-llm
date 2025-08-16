@@ -13,10 +13,23 @@ const API_CONFIG = {
     fields: [
       'NCTId',
       'BriefTitle',
-      'OfficialTitle'
+      'OfficialTitle',
+      'Acronym',
+      'OverallStatus',
+      'BriefSummary',
+      'Condition',
+      'Sex',
+      'MinimumAge',
+      'MaximumAge',
+      'Phase',
+      'EnrollmentCount',
+      'StudyType',
+      'StartDate',
+      'CompletionDate',
+      'LocationCity',
     ],
     pageSize: 20,
-    maxResults: 10
+    // maxResults: 10
   },
   
   // Server Configuration

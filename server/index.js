@@ -72,8 +72,8 @@ app.post('/api/search-trials', async (req, res) => {
       return res.status(400).json({ error: 'Diagnosis is required' });
     }
 
-    // Build search query for ClinicalTrials.gov API - keep it simple to avoid "too complicated query" error
-    const searchTerms = diagnosis.split(' ')[0]; // Use only the first word of diagnosis (e.g., "Migraine" instead of "Migraine headaches")
+    // Build search query for ClinicalTrials.gov API
+    const searchTerms = [diagnosis, ...symptoms].join(' ');
     
     try {
       // Using the ClinicalTrials.gov API v2

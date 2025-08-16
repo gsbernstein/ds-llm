@@ -3,13 +3,11 @@ import TranscriptInput from './components/TranscriptInput';
 import PatientDataDisplay from './components/PatientDataDisplay';
 import ClinicalTrialsList from './components/ClinicalTrialsList';
 import Header from './components/Header';
+import { ApiService } from './services/api';
 import { 
   PatientData, 
   ClinicalTrial, 
-  AppStep, 
-  AnalyzeTranscriptResponse, 
-  SearchTrialsResponse,
-  SampleTranscriptResponse 
+  AppStep
 } from './types';
 
 function App(): React.JSX.Element {
@@ -26,42 +24,19 @@ function App(): React.JSX.Element {
     
     try {
       // Step 1: Analyze transcript with LLM
-      const response = await fetch('/api/analyze-transcript', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transcript: transcriptText }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to analyze transcript');
-      }
-
-      const extractedData: AnalyzeTranscriptResponse = await response.json();
+      const extractedData = await ApiService.analyzeTranscript(transcriptText);
       setPatientData(extractedData);
       setCurrentStep('analysis');
 
       // Step 2: Search for clinical trials
-      const trialsResponse = await fetch('/api/search-trials', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          diagnosis: extractedData.diagnosis,
-          symptoms: extractedData.symptoms,
-          patientAge: extractedData.patientAge,
-          patientGender: extractedData.patientGender,
-        }),
+      const trials = await ApiService.searchTrials({
+        diagnosis: extractedData.diagnosis,
+        symptoms: extractedData.symptoms,
+        patientAge: extractedData.patientAge || 0,
+        patientGender: extractedData.patientGender || 'other',
       });
-
-      if (!trialsResponse.ok) {
-        throw new Error('Failed to search clinical trials');
-      }
-
-      const trialsData: SearchTrialsResponse = await trialsResponse.json();
-      setTrials(trialsData.trials);
+      
+      setTrials(trials);
       setCurrentStep('results');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
@@ -74,10 +49,9 @@ function App(): React.JSX.Element {
 
   const handleUseSampleTranscript = async (): Promise<void> => {
     try {
-      const response = await fetch('/api/sample-transcript');
-      const data: SampleTranscriptResponse = await response.json();
-      setTranscript(data.transcript);
-      await handleTranscriptSubmit(data.transcript);
+      const transcript = await ApiService.getSampleTranscript();
+      setTranscript(transcript);
+      await handleTranscriptSubmit(transcript);
     } catch (err) {
       setError('Failed to load sample transcript');
     }

@@ -4,46 +4,25 @@ const dotenv = require('dotenv');
 const OpenAI = require('openai');
 const axios = require('axios');
 
+// Import separated modules
+const sampleTranscript = require('./data/sampleTranscript');
+const { mockPatientData, mockClinicalTrials } = require('./data/mockData');
+const { createTranscriptAnalysisPrompt } = require('./prompts/transcriptAnalysis');
+const API_CONFIG = require('./config/apiConfig');
+
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = API_CONFIG.server.port;
 
 // Middleware
-app.use(cors());
+app.use(cors(API_CONFIG.server.cors));
 app.use(express.json());
 
 // Initialize OpenAI
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-// Sample transcript for demo purposes
-const sampleTranscript = `Doctor: Good morning, Sarah. How are you feeling today?
-
-Patient: Not great, Dr. Johnson. I've been having these terrible headaches for the past three weeks, and they're getting worse. They're usually in the morning and last most of the day.
-
-Doctor: I'm sorry to hear that. Can you tell me more about the headaches? Where exactly do you feel them?
-
-Patient: They're mostly on the right side of my head, behind my eye. Sometimes they're so bad I can't focus at work. I've also been feeling nauseous when they happen.
-
-Doctor: Have you noticed any other symptoms? Any vision changes, sensitivity to light or sound?
-
-Patient: Yes, actually. Bright lights really bother me during the headaches, and loud noises make them worse. I've also been having trouble sleeping because of the pain.
-
-Doctor: How old are you, Sarah?
-
-Patient: I'm 42.
-
-Doctor: And do you have any family history of migraines or other neurological conditions?
-
-Patient: My mother had migraines, and my sister gets them too. They both started around the same age I am now.
-
-Doctor: I see. Have you tried any over-the-counter medications?
-
-Patient: I've tried Tylenol and Advil, but they don't seem to help much. The pain just keeps coming back.
-
-Doctor: Based on what you're describing, this sounds like classic migraine symptoms. The fact that they're unilateral, associated with nausea and light sensitivity, and have a family history all point to migraines. Let me prescribe you a medication specifically for migraines, and I'd also like to discuss some preventive strategies.`;
 
 // Extract patient data using OpenAI
 app.post('/api/analyze-transcript', async (req, res) => {
@@ -57,45 +36,17 @@ app.post('/api/analyze-transcript', async (req, res) => {
     // Check if OpenAI API key is available and has quota
     if (!process.env.OPENAI_API_KEY) {
       // Fallback to sample data for demo purposes
-      const fallbackData = {
-        diagnosis: "Migraine",
-        symptoms: ["Headache", "Nausea", "Light sensitivity", "Sound sensitivity"],
-        patientAge: "42",
-        patientGender: "Female",
-        medicalHistory: "No significant medical history",
-        currentMedications: ["Tylenol", "Advil"],
-        treatmentPlan: "Prescription migraine medication and preventive strategies",
-        severity: "moderate",
-        duration: "3 weeks",
-        familyHistory: "Mother and sister have migraines"
-      };
-      return res.json(fallbackData);
+      return res.json(mockPatientData);
     }
 
-    const prompt = `Analyze the following patient-doctor conversation transcript and extract key medical information in JSON format. Include:
-
-{
-  "diagnosis": "primary diagnosis or suspected condition",
-  "symptoms": ["list of main symptoms"],
-  "patientAge": "patient age",
-  "patientGender": "patient gender if mentioned",
-  "medicalHistory": "relevant medical history",
-  "currentMedications": ["current medications"],
-  "treatmentPlan": "treatment plan if mentioned",
-  "severity": "condition severity (mild/moderate/severe)",
-  "duration": "how long symptoms have been present",
-  "familyHistory": "relevant family history"
-}
-
-Transcript: ${transcript}
-
-Please provide only the JSON response, no additional text.`;
+    const prompt = createTranscriptAnalysisPrompt(transcript);
 
     try {
       const completion = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: API_CONFIG.openai.model,
         messages: [{ role: "user", content: prompt }],
-        temperature: 0.1,
+        temperature: API_CONFIG.openai.temperature,
+        max_tokens: API_CONFIG.openai.maxTokens,
       });
 
       const extractedData = JSON.parse(completion.choices[0].message.content);
@@ -104,19 +55,7 @@ Please provide only the JSON response, no additional text.`;
       console.error('OpenAI API error:', openaiError.message);
       
       // If OpenAI API fails (quota exceeded, etc.), use fallback data
-      const fallbackData = {
-        diagnosis: "Migrainez",
-        symptoms: ["Headache", "Nausea", "Light sensitivity", "Sound sensitivity"],
-        patientAge: "42",
-        patientGender: "Female",
-        medicalHistory: "No significant medical history",
-        currentMedications: ["Tylenol", "Advil"],
-        treatmentPlan: "Prescription migraine medication and preventive strategies",
-        severity: "moderate",
-        duration: "3 weeks",
-        familyHistory: "Mother and sister have migraines"
-      };
-      res.json(fallbackData);
+      res.json(mockPatientData);
     }
   } catch (error) {
     console.error('Error analyzing transcript:', error);
@@ -138,13 +77,13 @@ app.post('/api/search-trials', async (req, res) => {
     
     try {
       // Using the Studies endpoint with search parameters
-      const response = await axios.get('https://classic.clinicaltrials.gov/api/query/study_fields', {
+      const response = await axios.get(API_CONFIG.clinicalTrials.baseUrl, {
         params: {
           expr: searchTerms,
-          fields: 'NCTId,BriefTitle,OfficialTitle,Condition,InterventionType,InterventionName,Phase,Status,LeadSponsorName,LocationCountry,MinimumAge,MaximumAge,Sex,StudyType,EnrollmentCount,StartDate,CompletionDate,Description',
-          min_rnk: 1,
-          max_rnk: 20,
-          fmt: 'json'
+          fields: API_CONFIG.clinicalTrials.fields,
+          min_rnk: API_CONFIG.clinicalTrials.minRank,
+          max_rnk: API_CONFIG.clinicalTrials.maxRank,
+          fmt: API_CONFIG.clinicalTrials.format
         }
       });
 
@@ -181,62 +120,14 @@ app.post('/api/search-trials', async (req, res) => {
             studyType: studyFields.StudyType?.[0]
           };
         })
-        .slice(0, 10); // Limit to top 10 results
+        .slice(0, API_CONFIG.clinicalTrials.maxResults); // Limit to configured max results
 
       res.json(formattedTrials);
     } catch (apiError) {
       console.error('ClinicalTrials.gov API error:', apiError.message);
       
       // Fallback to sample trial data
-      const fallbackTrials = [
-        {
-          nctId: "NCT12345678",
-          title: "Efficacy and Safety of New Migraine Treatment Lorem Ipsum",
-          condition: "Migraine",
-          intervention: "Oral medication",
-          phase: "Phase 2",
-          status: "Recruiting",
-          sponsor: "PharmaCorp Inc.",
-          country: "United States",
-          enrollment: "150",
-          startDate: "2024-01-15",
-          completionDate: "2025-01-15",
-          description: "A randomized, double-blind study to evaluate the efficacy and safety of a new migraine treatment in adults.",
-          studyType: "Interventional"
-        },
-        {
-          nctId: "NCT87654321",
-          title: "Preventive Treatment for Chronic Migraine",
-          condition: "Chronic Migraine",
-          intervention: "Injectable medication",
-          phase: "Phase 3",
-          status: "Active, not recruiting",
-          sponsor: "NeuroMed Solutions",
-          country: "United States",
-          enrollment: "300",
-          startDate: "2023-06-01",
-          completionDate: "2024-12-31",
-          description: "Study to evaluate the effectiveness of preventive treatment in reducing migraine frequency and severity.",
-          studyType: "Interventional"
-        },
-        {
-          nctId: "NCT11223344",
-          title: "Non-Pharmacological Treatment for Migraine",
-          condition: "Migraine",
-          intervention: "Behavioral therapy",
-          phase: "Phase 1",
-          status: "Recruiting",
-          sponsor: "MindBody Institute",
-          country: "United States",
-          enrollment: "75",
-          startDate: "2024-03-01",
-          completionDate: "2025-03-01",
-          description: "Evaluation of cognitive behavioral therapy and relaxation techniques for migraine management.",
-          studyType: "Interventional"
-        }
-      ];
-      
-      res.json(fallbackTrials);
+      res.json(mockClinicalTrials);
     }
   } catch (error) {
     console.error('Error searching trials:', error);

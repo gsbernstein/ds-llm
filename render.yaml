@@ -24,4 +24,4 @@ services:
     startCommand: cd client && npx serve -s build -l $PORT
     envVars:
       - key: REACT_APP_API_URL
-        value: https://clinical-trial-search-api.onrender.com
+        value: https://clinical-trial-search-api.onrender.com/api

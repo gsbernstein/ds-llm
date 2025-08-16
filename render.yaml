@@ -1,13 +1,27 @@
 services:
+  # Backend API service
   - type: web
-    name: clinical-trials-matcher
+    name: clinical-trial-search-api
     env: node
     plan: free
-    buildCommand: npm run install-all && npm run build
-    startCommand: npm start
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: OPENAI_API_KEY
         sync: false
+      - key: PORT
+        value: 10000
     healthCheckPath: /api/health
+
+  # Frontend service
+  - type: web
+    name: clinical-trial-search
+    env: static
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://clinical-trial-search.onrender.com

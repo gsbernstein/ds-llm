@@ -98,6 +98,7 @@ app.post('/api/search-trials', async (req, res) => {
             const status = protocol?.statusModule;
             const conditions = protocol?.conditionsModule;
             const design = protocol?.designModule;
+            const sponsor = protocol?.sponsorCollaboratorsModule;
             // const eligibility = protocol?.eligibilityModule;
             const locations = protocol?.contactsLocationsModule;
 
@@ -108,7 +109,7 @@ app.post('/api/search-trials', async (req, res) => {
               intervention: 'Not specified', // Not available in current API response
               phase: design?.phases?.[0] || 'Not specified',
               status: status?.overallStatus || 'Not specified',
-              sponsor: 'Not specified', // Not available in current API response
+              sponsor: sponsor?.leadSponsor?.name || 'Not specified',
               country: locations?.locations?.[0]?.country || 'Not specified',
               enrollment: design?.enrollmentInfo?.count?.toString() || 'Not specified',
               startDate: status?.startDateStruct?.date || 'Not specified',

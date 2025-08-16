@@ -27,6 +27,9 @@ const API_CONFIG = {
       'StartDate',
       'CompletionDate',
       'LocationCity',
+      'LeadSponsorName',
+      'LeadSponsorClass',
+      'CollaboratorName',
     ],
     pageSize: 20,
     // maxResults: 10

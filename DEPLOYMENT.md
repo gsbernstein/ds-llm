@@ -24,13 +24,13 @@ This guide covers free and cheap hosting options for your clinical trials matchi
    - Render will automatically detect the `render.yaml` file and deploy both services
 
 3. **Set Environment Variables**
-   - In your Render dashboard, go to the backend service (`clinical-trials-api`)
+   - In your Render dashboard, go to the backend service (`clinical-trial-search-api`)
    - Add environment variable: `OPENAI_API_KEY` with your OpenAI API key
    - The frontend will automatically get the API URL from the render.yaml
 
 4. **Access your app**
-   - Frontend: `https://clinical-trials-client.onrender.com`
-   - Backend: `https://clinical-trials-api.onrender.com`
+   - Frontend: `https://clinical-trial-search.onrender.com`
+   - Backend: `https://clinical-trial-search-api.onrender.com`
 
 ## 🌐 Alternative Free Hosting Options
 

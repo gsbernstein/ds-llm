@@ -20,8 +20,8 @@ services:
     name: clinical-trial-search
     env: static
     plan: free
-    buildCommand: cd client && npm install && npm run build
+    buildCommand: cd client && npm install --legacy-peer-deps && npm run build
     staticPublishPath: ./client/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://clinical-trial-search.onrender.com
+        value: https://clinical-trial-search-api.onrender.com

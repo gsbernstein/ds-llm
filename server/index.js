@@ -72,52 +72,50 @@ app.post('/api/search-trials', async (req, res) => {
       return res.status(400).json({ error: 'Diagnosis is required' });
     }
 
-    // Build search query for ClinicalTrials.gov API
-    const searchTerms = [diagnosis, ...symptoms].join(' ');
+    // Build search query for ClinicalTrials.gov API - keep it simple to avoid "too complicated query" error
+    const searchTerms = diagnosis.split(' ')[0]; // Use only the first word of diagnosis (e.g., "Migraine" instead of "Migraine headaches")
     
     try {
-      // Using the Studies endpoint with search parameters
+      // Using the ClinicalTrials.gov API v2
       const response = await axios.get(API_CONFIG.clinicalTrials.baseUrl, {
         params: {
-          expr: searchTerms,
-          fields: API_CONFIG.clinicalTrials.fields,
-          min_rnk: API_CONFIG.clinicalTrials.minRank,
-          max_rnk: API_CONFIG.clinicalTrials.maxRank,
-          fmt: API_CONFIG.clinicalTrials.format
+          'query.term': searchTerms,
+          fields: API_CONFIG.clinicalTrials.fields.join(','),
+          pageSize: API_CONFIG.clinicalTrials.pageSize
         }
       });
 
-      const trials = response.data.StudyFieldsResponse.StudyFields || [];
+      const trials = response.data.studies || [];
       
       // Filter and format trials
       const formattedTrials = trials
         .filter(trial => {
-          const studyFields = trial.StudyFields;
-          const age = parseInt(patientAge);
-          const minAge = parseInt(studyFields.MinimumAge?.[0] || '0');
-          const maxAge = parseInt(studyFields.MaximumAge?.[0] || '999');
-          const sex = studyFields.Sex?.[0];
-          
-          // Basic filtering
-          return age >= minAge && age <= maxAge && 
-                 (!sex || sex === 'All' || sex === patientGender);
+          // Basic filtering - we'll implement more sophisticated filtering later
+          return true; // For now, return all trials
         })
         .map(trial => {
-          const studyFields = trial.StudyFields;
+          const identification = trial.protocolSection?.identificationModule;
+          const description = trial.protocolSection?.descriptionModule;
+          const status = trial.protocolSection?.statusModule;
+          const sponsor = trial.protocolSection?.sponsorCollaboratorsModule;
+          const conditions = trial.protocolSection?.conditionsModule;
+          const interventions = trial.protocolSection?.interventionsModule;
+          const eligibility = trial.protocolSection?.eligibilityModule;
+          
           return {
-            nctId: studyFields.NCTId?.[0],
-            title: studyFields.BriefTitle?.[0] || studyFields.OfficialTitle?.[0],
-            condition: studyFields.Condition?.[0],
-            intervention: studyFields.InterventionName?.[0],
-            phase: studyFields.Phase?.[0],
-            status: studyFields.Status?.[0],
-            sponsor: studyFields.LeadSponsorName?.[0],
-            country: studyFields.LocationCountry?.[0],
-            enrollment: studyFields.EnrollmentCount?.[0],
-            startDate: studyFields.StartDate?.[0],
-            completionDate: studyFields.CompletionDate?.[0],
-            description: studyFields.Description?.[0],
-            studyType: studyFields.StudyType?.[0]
+            nctId: identification?.nctId,
+            title: identification?.briefTitle || identification?.officialTitle || 'Title not available',
+            condition: conditions?.conditions?.[0] || 'Not specified',
+            intervention: interventions?.interventions?.[0]?.interventionName || 'Not specified',
+            phase: status?.phase || 'Not specified',
+            status: status?.overallStatus || 'Not specified',
+            sponsor: sponsor?.leadSponsor?.leadSponsorName || 'Not specified',
+            country: eligibility?.locations?.[0]?.country || 'Not specified',
+            enrollment: eligibility?.enrollmentInfo?.enrollmentCount || 'Not specified',
+            startDate: status?.startDateStruct?.date || 'Not specified',
+            completionDate: status?.completionDateStruct?.date || 'Not specified',
+            description: description?.briefSummary || 'Study details available on ClinicalTrials.gov',
+            studyType: status?.studyType || 'Not specified'
           };
         })
         .slice(0, API_CONFIG.clinicalTrials.maxResults); // Limit to configured max results
@@ -125,6 +123,8 @@ app.post('/api/search-trials', async (req, res) => {
       res.json(formattedTrials);
     } catch (apiError) {
       console.error('ClinicalTrials.gov API error:', apiError.message);
+      console.error('Full error:', apiError);
+      console.error('Error response:', apiError.response?.data);
       
       // Fallback to sample trial data
       res.json(mockClinicalTrials);

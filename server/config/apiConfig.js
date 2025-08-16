@@ -9,30 +9,13 @@ const API_CONFIG = {
   
   // ClinicalTrials.gov API Configuration
   clinicalTrials: {
-    baseUrl: "https://classic.clinicaltrials.gov/api/query/study_fields",
+    baseUrl: "https://clinicaltrials.gov/api/v2/studies",
     fields: [
       'NCTId',
       'BriefTitle',
-      'OfficialTitle',
-      'Condition',
-      'InterventionType',
-      'InterventionName',
-      'Phase',
-      'Status',
-      'LeadSponsorName',
-      'LocationCountry',
-      'MinimumAge',
-      'MaximumAge',
-      'Sex',
-      'StudyType',
-      'EnrollmentCount',
-      'StartDate',
-      'CompletionDate',
-      'Description'
-    ].join(','),
-    minRank: 1,
-    maxRank: 20,
-    format: 'json',
+      'OfficialTitle'
+    ],
+    pageSize: 20,
     maxResults: 10
   },
   
